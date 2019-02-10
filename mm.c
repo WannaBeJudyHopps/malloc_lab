@@ -37,19 +37,33 @@ team_t team = {
 
 /* single word (4) or double word (8) alignment */
 #define ALIGNMENT 8
-
+#define FREE 0
+#define WRITTEN 1
 /* rounds up to the nearest multiple of ALIGNMENT */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7)
-
-
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
-
+#define MINIMUM_BLOCK (SIZE_T_SIZE*3)
+#define NEXTFREE(head) ((void*)*(size_t*)(head))
+#define SIZE_WRITE(pointer) (*(size_t*)(pointer))
 /* 
  * mm_init - initialize the malloc package.
  */
+inline void mm_construct(int size, void*(location)){
+	size = ((size<<1) + 1);
+	SIZE_WRITE(location) = size;
+}
+inline void mm_free();
+
+inline void mm_nextfree(void*(head),void*(nextfree)){
+	*(size_t*)(head) = (size_t)(nextfree);
+}
+
 int mm_init(void)
 {
-    return 0;
+	void *head = mem_heap_lo();
+	mem_sbrk(SIZE_T_SIZE);
+	mm_nextfree(head,mem_sbrk(0));
+	return 0;
 }
 
 /* 
@@ -57,15 +71,33 @@ int mm_init(void)
  *     Always allocate a block whose size is a multiple of the alignment.
  */
 void *mm_malloc(size_t size)
-{
-    int newsize = ALIGN(size + SIZE_T_SIZE);
-    void *p = mem_sbrk(newsize);
-    if (p == (void *)-1)
-	return NULL;
-    else {
-        *(size_t *)p = size;
-        return (void *)((char *)p + SIZE_T_SIZE);
-    }
+{ 
+	
+//    int newsize = ALIGN(size + SIZE_T_SIZE);
+//    void *p = mem_sbrk(newsize);
+//    if (p == (void *)-1)
+//	return NULL;
+//    else {
+//        *(size_t *)p = size;
+//		printf("코드가 리턴하는 주소%p\n",((char *)p + SIZE_T_SIZE));
+//		printf("만약 size_t 대신 int가 들어간다면 %p\n",((char *)p + sizeof(int))) ;
+//        return (void *)((char *)p + SIZE_T_SIZE);
+//	}
+	void* next_free;
+	int modified_size;
+	
+	next_free = *(size_t*)(mem_heap_lo());
+	((size + SIZE_T_SIZE) > MINIMUM_BLOCK) ? (modified_size = (size + SIZE_T_SIZE)) : (modified_size = MINIMUM_BLOCK);
+	//if next free is end of current heap
+	if(next_free == mem_sbrk(0)){
+		printf("next free %p\n",next_free);
+		mm_construct(modified_size,next_free);
+		mem_sbrk(modified_size);
+		mm_nextfree(mem_heap_lo(), mem_sbrk(0));
+		printf("return malloc %p\n",mem_sbrk(0));
+		return mem_sbrk(0);
+	}
+
 }
 
 /*
