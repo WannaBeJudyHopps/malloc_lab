@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <math.h>
 #include "mm.h"
 #include "memlib.h"
 
@@ -41,29 +41,81 @@ team_t team = {
 #define WRITTEN 1
 /* rounds up to the nearest multiple of ALIGNMENT */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7)
+/* size of SIZE BLOCK  */
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
-#define MINIMUM_BLOCK (SIZE_T_SIZE*3)
+/* size of minimum block  */
+#define MINIMUM_BLOCK (SIZE_T_SIZE<<2)
+/* find first Free using queue  */
 #define NEXTFREE(head) ((void*)*(size_t*)(head))
+/* when writing a size into block  */
 #define SIZE_WRITE(pointer) (*(size_t*)(pointer))
+/* use when finding a minimum size of required size  */
+#define MODIFIED_SIZE(size) ((size) > (MINIMUM_BLOCK) ? ( ((size) + (SIZE_T_SIZE << 1))) : ( MINIMUM_BLOCK) )
 /* 
  * mm_init - initialize the malloc package.
  */
-inline void mm_construct(int size, void*(location)){
+inline void mm_construct(size_t size, void*(location)){
+
 	size = ((size<<1) + 1);
-	SIZE_WRITE(location) = size;
+	SIZE_WRITE(l
+			ocation) = size;
+	SIZE_WRITE(((char*)location + size - SIZE_T_SIZE)) = size;
+
 }
 inline void mm_free();
 
-inline void mm_nextfree(void*(head),void*(nextfree)){
+inline void mm_writedest(void*(head),void*(nextfree))
+{
+
 	*(size_t*)(head) = (size_t)(nextfree);
 }
 
+/* I used segrement free block method in this lab.  */
+/* It consists of 7 pointers, and 1 size flag block  */
+/* in mm_init, I declared pointer blocks and flag block  */
+
 int mm_init(void)
 {
-	void *head = mem_heap_lo();
-	mem_sbrk(SIZE_T_SIZE);
-	mm_nextfree(head,mem_sbrk(0));
-	return 0;
+//	void *head = mem_heap_lo();
+//	mem_sbrk(SIZE_T_SIZE);
+//	mm_nextfree(head,mem_sbrk(0));
+//	return 0;
+	size_t* head = 	mem_sbrk((SIZE_T_SIZE<<3));
+	size_t* tail = mem_sbrk(0);
+	int i;
+	for(i = 1; i < 8 ; i++){
+		mm_writedest(++head, tail);
+	}
+	
+}
+void* find_location(size_t size, size_t* head){
+//	int modsize = size - SIZE_T_SIZE;
+	if((int)size <= 0) {
+		printf("Wrong size!\n");
+		return NULL;
+	}
+	size_t state = *head;
+	if(state == 0){
+		return mem_sbrk(0);
+	}
+	size_t* nextfree;
+	size_t modsize = (size_t)logb((size >> 5));
+	size_t cmpstate = 1<<(size - 1);
+
+	if(cmpstate & state){
+		nextfree = *((size_t*)head + modsize);
+		return (void*)nextfree;
+	}
+	else if(state > cmpstate){
+	}
+	else{
+		state = (cmpstate | state);
+		nextfree = ((size_t*)head + modsize);
+
+		return mem_sbrk(0);
+	}
+
+	
 }
 
 /* 
@@ -87,18 +139,20 @@ void *mm_malloc(size_t size)
 	int modified_size;
 	
 	next_free = *(size_t*)(mem_heap_lo());
-	((size + SIZE_T_SIZE) > MINIMUM_BLOCK) ? (modified_size = (size + SIZE_T_SIZE)) : (modified_size = MINIMUM_BLOCK);
+	modified_size = MODIFIED_SIZE(size);
 	//if next free is end of current heap
 	if(next_free == mem_sbrk(0)){
 		printf("next free %p\n",next_free);
 		printf("size = %lu, modified_size =%lu\n",size, modified_size);
 		mm_construct(modified_size,next_free);
 		mem_sbrk(modified_size);
-		mm_nextfree(mem_heap_lo(), mem_sbrk(0));
+		mm_writedest(mem_heap_lo(), mem_sbrk(0));
 		next_free = ((char*)(next_free)+SIZE_T_SIZE);
 		printf("return malloc %p\n",next_free );
 		return next_free;
 	}
+
+	
 
 }
 
