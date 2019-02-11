@@ -91,11 +91,13 @@ void *mm_malloc(size_t size)
 	//if next free is end of current heap
 	if(next_free == mem_sbrk(0)){
 		printf("next free %p\n",next_free);
+		printf("size = %lu, modified_size =%lu\n",size, modified_size);
 		mm_construct(modified_size,next_free);
 		mem_sbrk(modified_size);
 		mm_nextfree(mem_heap_lo(), mem_sbrk(0));
-		printf("return malloc %p\n",mem_sbrk(0));
-		return mem_sbrk(0);
+		next_free = ((char*)(next_free)+SIZE_T_SIZE);
+		printf("return malloc %p\n",next_free );
+		return next_free;
 	}
 
 }
