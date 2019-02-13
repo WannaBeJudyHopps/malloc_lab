@@ -1,0 +1,44 @@
+==400629== Memcheck, a memory error detector
+==400629== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==400629== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==400629== Command: /home/csapp-19winter-stu/ljunhoo98/malloc-handout1/mdriver
+==400629== Parent PID: 390810
+==400629== 
+--400629-- 
+--400629-- Valgrind options:
+--400629--    --leak-check=full
+--400629--    --log-file=memcheck.txt
+--400629--    -v
+--400629--    --error-limit=no
+--400629-- Contents of /proc/version:
+--400629--   Linux version 4.4.0-139-generic (buildd@lcy01-amd64-006) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.10) ) #165-Ubuntu SMP Wed Oct 24 10:58:50 UTC 2018
+--400629-- 
+--400629-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2-sse3-lzcnt
+--400629-- Page sizes: currently 4096, max supported 4096
+--400629-- Valgrind library directory: /usr/lib/valgrind
+--400629-- Reading syms from /lib32/ld-2.23.so
+--400629--    object doesn't have a symbol table
+
+valgrind:  Fatal error at startup: a function redirection
+valgrind:  which is mandatory for this platform-tool combination
+valgrind:  cannot be set up.  Details of the redirection are:
+valgrind:  
+valgrind:  A must-be-redirected function
+valgrind:  whose name matches the pattern:      strlen
+valgrind:  in an object with soname matching:   ld-linux.so.2
+valgrind:  was not found whilst processing
+valgrind:  symbols from the object with soname: ld-linux.so.2
+valgrind:  
+valgrind:  Possible fixes: (1, short term): install glibc's debuginfo
+valgrind:  package on this machine.  (2, longer term): ask the packagers
+valgrind:  for your Linux distribution to please in future ship a non-
+valgrind:  stripped ld.so (or whatever the dynamic linker .so is called)
+valgrind:  that exports the above-named function using the standard
+valgrind:  calling conventions for this platform.  The package you need
+valgrind:  to install for fix (1) is called
+valgrind:  
+valgrind:    On Debian, Ubuntu:                 libc6-dbg
+valgrind:    On SuSE, openSuSE, Fedora, RHEL:   glibc-debuginfo
+valgrind:  
+valgrind:  Cannot continue -- exiting now.  Sorry.
+
